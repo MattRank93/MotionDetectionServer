@@ -37,11 +37,33 @@ def get_Hospital_req():
     hospitals = db.hosp_info.find({"state": state_req})
     return json.dumps([hospital for hospital in hospitals], default=newEncoder )
 
+@app.route("/hospital-test")
+def get_Hospital_req_test():
+    all_req = request.args.get()
+    hospitals = db.hosp_info.find({all_req: all_req})
+    return json.dumps([hospital for hospital in hospitals], default=newEncoder )
 
-@app.route("/add_one_note")
-def add_one():
-    db.todos.insert_one({'provider_id': "000003", 'body': "todo two"})
+
+@app.route("/user", methods=['post'])
+def add_one_user():
+    user_body = request.get_json()
+    print(user_body['name'])
+    db.users.insert_one({'name': user_body['name'], 'phone': user_body['phone']})
     return flask.jsonify(message="success")
+
+
+@app.route("/user", methods=['get'])
+def find_one_user():
+    name_req = request.args
+    print(name_req['name'])
+    if name_req["phone"] is None:
+        user = db.users.find_one({"name": name_req['name']})
+        return json.dumps(user, default=newEncoder)
+
+    else:
+        user = db.users.find_one({"phone": name_req['phone']})
+        return json.dumps(user, default=newEncoder)
+
 
 @app.route("/add_one_hospital")
 def add_one_hospital():
