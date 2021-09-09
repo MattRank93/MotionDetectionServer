@@ -1,10 +1,15 @@
 import os
+from PIL import Image
+import PIL
+import cv2
 import flask
 import mongoengine
+import numpy as np
 from flask import Flask, make_response, request, flash, url_for, send_from_directory
 from flask_pymongo import PyMongo
 from werkzeug.utils import secure_filename, redirect
-
+from datetime import date
+import uuid
 import json
 from bson.objectid import ObjectId
 
@@ -16,10 +21,11 @@ app.config['MONGODB_SETTINGS'] = {
 }
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/hospitols")
 db = mongodb_client.db
-
+global imgId
+imgId = 0
 # Upload function variables
 UPLOAD_FOLDER = '/home/mattrank/Desktop/PhotosRepo'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'avi'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def newEncoder(o):
@@ -32,7 +38,48 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/UploadFile', methods=[ 'POST'])
+async def upload_detected():
+  global imgId
+  str_encode  = request.files['file'].read()
+  # str_encode = request.files['id'].read()
+  print(str_encode)
+
+  nparr = np.fromstring(str_encode , np.uint8)
+  img_decode = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+  imgId += 1
+  filename = str(imgId) + "test.jpg"
+  print(filename)
+  cv2.imwrite(filename, img_decode)
+  # img_decode = img_decode.save('Test.jpg')
+  return "200"
+
+# @app.route('/UploadVideo', methods=[ 'POST'])
+# async def upload_Video():
+#   global imgId
+#   str_encode  = request.files['file'].read()
+#   # str_encode = request.files['id'].read()
+#   nparr = np.fromstring(str_encode , np.uint8)
+#   img_decode = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+#   imgId += 1
+#   filename = str(imgId) + "test.avi"
+#   print(filename)
+#   cv2.imwrite(filename, img_decode)
+#   # img_decode = img_decode.save('Test.jpg')
+#   return "200"
+
+
+@app.route('/MotionDetected', methods=[ 'POST'])
+def date_detected():
+    date = request.args.get("date")
+
+    print(date)
+    return "200"
+
+# q
+
+
+@app.route('/UploadVideo', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -70,11 +117,13 @@ def get_Hospital_input(state):
     hospitals = db.hosp_info.find({"state": state})
     return json.dumps([hospital for hospital in hospitals], default=newEncoder )
 
+
 @app.route("/hospital")
 def get_Hospital_req():
     state_req = request.args.get('state')
     hospitals = db.hosp_info.find({"state": state_req})
     return json.dumps([hospital for hospital in hospitals], default=newEncoder )
+
 
 @app.route("/hospital-test")
 def get_Hospital_req_test():
