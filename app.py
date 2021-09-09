@@ -1,15 +1,17 @@
+##################
+# This application is a test bed for various flask technologies that will serve the
+# client motion detection application.
+##################
+
+
+
 import os
-from PIL import Image
-import PIL
 import cv2
 import flask
-import mongoengine
 import numpy as np
 from flask import Flask, make_response, request, flash, url_for, send_from_directory
 from flask_pymongo import PyMongo
 from werkzeug.utils import secure_filename, redirect
-from datetime import date
-import uuid
 import json
 from bson.objectid import ObjectId
 
